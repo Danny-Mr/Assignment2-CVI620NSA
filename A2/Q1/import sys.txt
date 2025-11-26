@@ -1,0 +1,25 @@
+import sys
+import cv2
+import numpy as np
+import pickle
+from sklearn.pipeline import Pipeline
+
+hog = cv2.HOGDescriptor((64, 64), (16, 16), (8, 8), (8, 8), 9)
+
+with open("best_cat_dog_model.pkl", "rb") as f:
+    model: Pipeline = pickle.load(f)
+
+def predict_image(path):
+    img = cv2.imread(path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    resized = cv2.resize(gray, (64, 64))
+    feat = hog.compute(resized).flatten().reshape(1, -1)
+    pred = model.predict(feat)[0]
+    return "cat" if pred == 0 else "dog"
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python predict.py path/to/image.jpg")
+        sys.exit(1)
+    img_path = sys.argv[1]
+    print(img_path, "->", predict_image(img_path))
